@@ -13,7 +13,7 @@ class Snare : public Spot, public Influence {
   bool isOperative() { return operative; };
 
   void implement(Spot& spot) override {
-    spot = Spot(0, 0, 'S');
+    Spot::setCategory('S');
     operative = false;
   }
 };
