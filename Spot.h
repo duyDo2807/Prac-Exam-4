@@ -17,7 +17,7 @@ class Spot {
 
   void setLoc(int x, int y) { location = std::make_tuple(x, y); }
 
-  void setCategory(char category) {}
+  void setCategory(char& category) { category = category; }
 };
 
 #endif
