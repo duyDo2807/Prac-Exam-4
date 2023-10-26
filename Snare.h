@@ -8,12 +8,12 @@ class Snare : public Spot, public Influence {
   bool operative;
 
  public:
-  Snare(int x, int y) : Spot(x, y, 'S') {}
+  Snare(int x, int y) : Spot(x, y, 'S'), operative(true) {}
 
   bool isOperative() { return operative; };
 
   void implement(Spot& spot) override {
-    Spot::setCategory('S');
+    spot.setCategory('S');
     operative = false;
   }
 };

@@ -1,13 +1,18 @@
 #ifndef PLAY_H
 #define PLAY_H
+#include <vector>
+
+#include "Persona.h"
+#include "Snare.h"
+#include "Spot.h"
 
 class Play {
  public:
-  Game(){};
+  Play(){};
 
-  std::vector<GameEntity*> get_entities() { return entities; };
+  std::vector<Spot*> get_entities() { return entities; };
 
-  void set_entities(std::vector<GameEntity*> entities) { entities = entities; };
+  void set_entities(std::vector<Spot*> matrix) { entities = entities; };
 
   std::vector<GameEntity*> initGame(int numShips, int numMines, int gridWidth,
                                     int gridHeight) {
