@@ -1,71 +1,98 @@
 #ifndef PLAY_H
 #define PLAY_H
+
+#include <ctime>
+#include <iostream>
 #include <vector>
 
+#include "Assists.h"
 #include "Persona.h"
 #include "Snare.h"
 #include "Spot.h"
 
 class Play {
  public:
-  Play(){};
+  Play() {}
 
-  std::vector<Spot*> get_entities() { return entities; };
+  std::vector<Spot*>& getMatrix() { return matrix; }
 
-  void set_entities(std::vector<Spot*> matrix) { entities = entities; };
+  void initPlay(int numPersonas, int numSnares, int matrixWidth,
+                int matrixHeight) {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-  std::vector<GameEntity*> initGame(int numShips, int numMines, int gridWidth,
-                                    int gridHeight) {
-    for (int i = 0; i < numShips; i++) {
-      std::tuple<int, int> shipPos =
-          Utils::generateRandomPos(gridWidth, gridHeight);
-      entities.push_back(new Ship(std::get<0>(shipPos), std::get<1>(shipPos)));
+    for (int i = 0; i < numPersonas; i++) {
+      int x = std::rand() % matrixWidth;
+      int y = std::rand() % matrixHeight;
+      Persona* persona = new Persona(x, y);
+      matrix.push_back(persona);
     }
 
-    for (int i = 0; i < numMines; i++) {
-      std::tuple<int, int> minePos =
-          Utils::generateRandomPos(gridWidth, gridHeight);
-      entities.push_back(new Mine(std::get<0>(minePos), std::get<1>(minePos)));
+    for (int i = 0; i < numSnares; i++) {
+      int x = std::rand() % matrixWidth;
+      int y = std::rand() % matrixHeight;
+      Snare* snare = new Snare(x, y);
+      matrix.push_back(snare);
     }
+  }
 
-    return entities;
-  };
+  bool checkVictory(Persona& persona, int matrixWidth) {
+    std::tuple<int, int> loc = persona.getLoc();
+    int x = std::get<0>(loc);
+    return x >= matrixWidth;
+  }
 
-  void gameLoop(int maxIterations, double mineDistanceThreshold) {
-    for (int iteration = 0; iteration < maxIterations; iteration++) {
-      // Call move(1, 0) for all Ship objects
-      for (GameEntity* entity : entities) {
-        if (entity->getType() == 'S') {
-          Ship* ship = dynamic_cast<Ship*>(entity);
-          if (ship != nullptr) {
-            ship->move(1, 0);
-          }
-        }
+  void movePersonasRight() {
+    for (Spot* spot : matrix) {
+      if (dynamic_cast<Persona*>(spot) != nullptr) {
+        Persona* persona = dynamic_cast<Persona*>(spot);
+        persona->shift(1, 0);
       }
+    }
+  }
 
-      // Check if any Ship is within the mineDistanceThreshold of a Mine and
-      // explode it
-      for (GameEntity* ship : entities) {
-        if (ship->getType() == 'S') {
-          for (GameEntity* mine : entities) {
-            if (mine->getType() == 'M') {
-              double distance =
-                  Utils::calculateDistance(ship->getPos(), mine->getPos());
-              if (distance < mineDistanceThreshold) {
-                Mine* mineObj = dynamic_cast<Mine*>(mine);
-                if (mineObj != nullptr) {
-                  Explosion explosion = mineObj->explode();
-                }
-              }
+  void activateSnares(double snareTriggerDistance) {
+    for (Spot* spot : matrix) {
+      if (dynamic_cast<Persona*>(spot) != nullptr) {
+        Persona* persona = dynamic_cast<Persona*>(spot);
+        for (Spot* s : matrix) {
+          if (dynamic_cast<Snare*>(s) != nullptr) {
+            Snare* snare = dynamic_cast<Snare*>(s);
+            double distance =
+                Assists::evaluateDistance(persona->getLoc(), snare->getLoc());
+            if (distance <= snareTriggerDistance) {
+              snare->implement(*persona);
             }
           }
         }
       }
     }
-  };
+  }
+
+  void playCycle(int maxCycles, double snareTriggerDistance) {
+    for (int cycle = 1; cycle <= maxCycles; cycle++) {
+      movePersonasRight();
+      activateSnares(snareTriggerDistance);
+
+      for (Spot* spot : matrix) {
+        if (dynamic_cast<Persona*>(spot) != nullptr) {
+          Persona* persona = dynamic_cast<Persona*>(spot);
+          if (checkVictory(*persona, 10)) {
+            std::cout << "Persona has won the game!" << std::endl;
+            return;
+          }
+        }
+      }
+
+      if (cycle == maxCycles) {
+        std::cout << "Maximum number of cycles reached. Game over."
+                  << std::endl;
+        return;
+      }
+    }
+  }
 
  private:
-  std::vector<GameEntity*> entities;
+  std::vector<Spot*> matrix;
 };
 
 #endif
