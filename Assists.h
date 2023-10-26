@@ -9,8 +9,8 @@ class Assists {
  public:
   static std::tuple<int, int> createRandomLoc(int matrixWidth,
                                               int matrixHeight) {
-    int x = std::rand() % (matrixWidth + 1);
-    int y = std::rand() % (matrixHeight + 1);
+    int x = std::rand() % matrixWidth;
+    int y = std::rand() % matrixHeight;
     return std::make_tuple(x, y);
   }
 
